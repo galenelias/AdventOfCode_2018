@@ -1,18 +1,17 @@
+use std::collections::HashSet;
+use itertools::Itertools;
+use itertools::FoldWhile::{Continue, Done};
 
 pub fn solve(inputs : Vec<String>) {
-	let input = &inputs[0];
-	let input_ints = input.chars().filter_map(|c| { return c.to_digit(10);}).collect::<Vec<u32>>();
+	let inputs = inputs.iter().map(|line| line.parse::<i32>().unwrap()).collect_vec();
 
-	let sum1 : u32 = input_ints.iter()
-		.zip(input_ints.iter().cycle().skip(1))
-		.filter_map(|(a, b)| { if a == b { Some(a) } else { None }})
-		.sum();
+	let part1 = inputs.iter().sum::<i32>();
+	println!("Part 1: {}", part1);
 
-	let sum2 : u32 = input_ints.iter()
-		.zip(input_ints.iter().cycle().skip(input_ints.len()/2))
-		.filter_map(|(a, b)| { if a == b { Some(a) } else { None }})
-		.sum();
+	let mut vals = HashSet::new();
+	let part2 = inputs.iter().cycle().fold_while(0, |sum, x| {
+		if !vals.insert(sum) { Done(sum) } else { Continue(sum + x) }
+	}).into_inner();
 
-	println!("Part1: {}", sum1);
-	println!("Part2: {}", sum2);
+	println!("Part 2: {}", part2);
 }

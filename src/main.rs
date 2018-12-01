@@ -2,6 +2,7 @@ extern crate clap;
 extern crate regex;
 extern crate serde_json;
 extern crate chrono;
+extern crate itertools;
 
 #[macro_use]
 extern crate serde_derive;
