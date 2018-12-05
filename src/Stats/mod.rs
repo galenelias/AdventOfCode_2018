@@ -1,7 +1,6 @@
 
 extern crate serde_json;
 
-use std::io::{self, BufRead};
 use serde_json::{Value, Map};
 use std::cmp;
 use chrono::prelude::*;
@@ -18,11 +17,8 @@ struct LeaderBoard {
 	members : Map<String, Value>,
 }
 
-pub fn show_stats(day_filter : u32) {
-	let stdin = io::stdin();
-	let input = stdin.lock().lines().next().unwrap().unwrap();
-
-	let leaderboard: LeaderBoard = serde_json::from_str(input.as_ref()).unwrap();
+pub fn show_stats(day_filter : Option<u32>, input : Vec<String>) {
+	let leaderboard: LeaderBoard = serde_json::from_str(input[0].as_ref()).unwrap();
 
 	let mut members : Vec<Member> = Vec::new();
 	let mut max_day = 1;
@@ -50,7 +46,7 @@ pub fn show_stats(day_filter : u32) {
 	println!("");
 	
 	for day in 1..max_day+1 {
-		if day_filter != 0 && day != day_filter {
+		if day_filter.is_some() && day_filter != Some(day) {
 			continue;
 		}
 		let str_day = day.to_string();
@@ -58,14 +54,15 @@ pub fn show_stats(day_filter : u32) {
 			let str_star = star.to_string();
 			print!("{:>2}-{}:  ", str_day, str_star);
 
-			let mut times : Vec<DateTime<FixedOffset>>  = Vec::new();
+			let mut times : Vec<DateTime<Utc>>  = Vec::new();
 
 			for mem in &members {
 				if mem.completion_day_level.contains_key(&str_day) {
 					let data = &mem.completion_day_level[&str_day].as_object().unwrap();
 					if data.contains_key(&str_star) {
 						let date_str = data[&str_star]["get_star_ts"].as_str().unwrap();
-						let date = DateTime::parse_from_str(&date_str, "%Y-%m-%dT%H:%M:%S%z").unwrap();
+						let naive = NaiveDateTime::from_timestamp(date_str.parse::<i64>().unwrap(), 0);
+						let date = DateTime::from_utc(naive, Utc);
 						times.push(date);
 					}
 				}
@@ -78,8 +75,10 @@ pub fn show_stats(day_filter : u32) {
 					let data = &mem.completion_day_level[&str_day].as_object().unwrap();
 					if data.contains_key(&str_star) {
 						let date_str = data[&str_star]["get_star_ts"].as_str().unwrap();
-						let date = DateTime::parse_from_str(&date_str, "%Y-%m-%dT%H:%M:%S%z").unwrap();
-						let date_local : DateTime<Local> = date.with_timezone(&Local);
+
+						let naive = NaiveDateTime::from_timestamp(date_str.parse::<i64>().unwrap(), 0);
+						let date = DateTime::<Utc>::from_utc(naive, Utc);
+						let date_local = date.with_timezone(&Local);
 
 						let rank = times.iter().position(|&t| t == date).unwrap();
 						print!("({}) {:^column_width$} ", rank+1, date_local.format("%b %d %l:%M:%S%P").to_string(), column_width=column_width);
