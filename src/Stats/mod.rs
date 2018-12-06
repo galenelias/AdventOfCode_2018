@@ -17,7 +17,7 @@ struct LeaderBoard {
 	members : Map<String, Value>,
 }
 
-pub fn show_stats(day_filter : Option<u32>, input : Vec<String>) {
+pub fn show_stats(day_filter : u32, input : Vec<String>) {
 	let leaderboard: LeaderBoard = serde_json::from_str(input[0].as_ref()).unwrap();
 
 	let mut members : Vec<Member> = Vec::new();
@@ -46,7 +46,7 @@ pub fn show_stats(day_filter : Option<u32>, input : Vec<String>) {
 	println!("");
 	
 	for day in 1..max_day+1 {
-		if day_filter.is_some() && day_filter != Some(day) {
+		if day_filter != 0 && day_filter != day {
 			continue;
 		}
 		let str_day = day.to_string();

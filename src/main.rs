@@ -85,7 +85,7 @@ fn main() {
 	}
 
 	if matches.is_present("stats") {
-		stats::show_stats(matches.value_of("day").map_or(None, |s| s.parse::<u32>().ok()), input);
+		stats::show_stats(matches.value_of("day").unwrap_or("0").parse::<u32>().unwrap(), input);	
 		return;
 	}
 
