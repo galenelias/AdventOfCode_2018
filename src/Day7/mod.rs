@@ -1,39 +1,50 @@
 use itertools::Itertools;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, BinaryHeap};
 use regex::Regex;
+use std::cmp::Ordering;
+
+#[derive(PartialEq, Eq, Debug)]
+struct Worker {
+	task: char,
+	end_time: usize,
+}
+
+impl Ord for Worker {
+	fn cmp(&self, other: &Self) -> Ordering {
+		self.end_time.cmp(&other.end_time).reverse()
+	}
+}
+
+impl PartialOrd for Worker {
+	fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+		Some(self.cmp(other))
+	}
+}
+
 
 fn solve_steps(part: usize, steps: &Vec<char>, req_map : &HashMap<char, Vec<char>>, total_workers: usize, work_cost_fn : &Fn(&char) -> usize) {
 	let mut done = HashMap::new();
-	let mut in_progress = HashMap::new();
 
 	let mut result = Vec::new();
-	let mut workers = vec![(0, 'A'); total_workers];  // Worker is a represented as a tuple of (timeleft, step in progress)
-	let mut total_time = 0;
+	let mut active_workers : BinaryHeap<Worker> = BinaryHeap::new();
+	let mut time = 0;
 
 	while result.len() != steps.len() {
-		total_time += 1;
-		let mut workers_free = 0;
+		time += 1;
 
-		// Have all workers make progress on their task, and potentially complete it an add it to our results
-		for worker in &mut workers {
-			if worker.0 == 1 {
-				done.insert(worker.1, true);
-				result.push(worker.1);
-			}
-			if worker.0 > 0 {
-				worker.0 -= 1;
-			}
-			if worker.0 == 0 {
-				workers_free += 1;
-			}
+		// Find any workers who are now done (active_workers is sorted by end_time)
+		while !active_workers.is_empty() && active_workers.peek().unwrap().end_time == time {
+			let worker = active_workers.pop().unwrap();
+			done.insert(worker.task, true);
+			result.push(worker.task);
 		}
 
-		if workers_free == 0 {
+		if active_workers.len() == total_workers {
 			continue;
 		}
 
 		for step in steps {
-			if *done.get(step).unwrap_or(&false) || *in_progress.get(step).unwrap_or(&false) {
+			if *done.get(step).unwrap_or(&false) || active_workers.iter().any(|worker| &worker.task == step) {
 				continue;
 			}
 
@@ -42,22 +53,16 @@ fn solve_steps(part: usize, steps: &Vec<char>, req_map : &HashMap<char, Vec<char
 
 			// If our requirements are all completed, find a worker to start working on it
 			if reqs.iter().all(|r| *done.get(r).unwrap_or(&false)) {
-				// Start working
-				let worker = workers.iter_mut().find(|w| w.0 == 0).unwrap();
-				worker.0 = work_cost_fn(step);
-				worker.1 = *step;
+				active_workers.push(Worker{task: *step, end_time: time + work_cost_fn(step)});
 
-				in_progress.insert(*step, true);
-
-				workers_free -= 1;
-				if workers_free == 0 {
+				if active_workers.len() == total_workers {
 					break;
 				}
 			}
 		}
 	}
 
-	println!("Part {}: {} ({})", part, total_time - 1, result.iter().collect::<String>());
+	println!("Part {}: {} ({})", part, time - 1, result.iter().collect::<String>());
 }
 
 pub fn solve(inputs : Vec<String>) {
