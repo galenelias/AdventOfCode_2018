@@ -1,24 +1,24 @@
 use itertools::Itertools;
 
+#[derive(Default, Debug)]
 struct Node {
 	children: Vec<Node>,
 	metadata: Vec<usize>,
 }
 
-fn parse_node(input: &Vec<usize>, pos: &mut usize) -> Node {
-	let child_count = input[*pos];
-	let metadata_count = input[*pos + 1];
-	(*pos) += 2;
+fn parse_node<'a>(vals: &mut impl Iterator<Item = usize>) -> Node
+{
+	let child_count = vals.next().unwrap();
+	let metadata_count = vals.next().unwrap();
 
-	let mut node = Node { children: vec![], metadata: vec![]};
+	let mut node = Node::default();
 
 	for _ in 0..child_count {
-		node.children.push(parse_node(input, pos));
+		node.children.push(parse_node(vals));
 	}
 
 	for _ in 0..metadata_count {
-		node.metadata.push(input[*pos]);
-		(*pos) += 1;
+		node.metadata.push(vals.next().unwrap());
 	}
 
 	return node;
@@ -45,9 +45,7 @@ fn value_of(node: &Node) -> usize {
 
 pub fn solve(inputs : Vec<String>) {
 	let input = inputs[0].split(" ").map(|w| w.parse::<usize>().unwrap()).collect_vec();
-
-	let mut pos = 0;
-	let root = parse_node(&input, &mut pos);
+	let root = parse_node(&mut input.into_iter());
 
 	println!("Part 1: {}", sum_metadata(&root));
 	println!("Part 2: {}", value_of(&root));
