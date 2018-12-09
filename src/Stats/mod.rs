@@ -30,12 +30,18 @@ pub fn show_stats(day_filter : u32, input : Vec<String>) {
 			max_day = cmp::max(max_day, day.parse::<u32>().unwrap());
 		}
 
-		if !m.completion_day_level.is_empty() {
+		if (day_filter == 0 && !m.completion_day_level.is_empty())
+			|| (day_filter != 0 && m.completion_day_level.contains_key(&day_filter.to_string())) {
 			members.push(m);
 		}
 	}
 
-	members.sort_by(|a,b| b.local_score.cmp(&a.local_score));
+	if day_filter == 0 {
+		members.sort_by(|a,b| b.local_score.cmp(&a.local_score));
+	} else {
+		let get_day_score = |m: &Member| -> String { m.completion_day_level[&day_filter.to_string()].as_object().unwrap()["1"]["get_star_ts"].as_str().unwrap().to_string() };
+		members.sort_by(|a,b| get_day_score(a).cmp(&get_day_score(b)));
+	}
 
 	let column_width = 19;
 
@@ -45,12 +51,12 @@ pub fn show_stats(day_filter : u32, input : Vec<String>) {
 	}
 	println!("");
 	
-	for day in 1..max_day+1 {
+	for day in 1..=max_day {
 		if day_filter != 0 && day_filter != day {
 			continue;
 		}
 		let str_day = day.to_string();
-		for star in 1..3 {
+		for star in 1..=2 {
 			let str_star = star.to_string();
 			print!("{:>2}-{}:  ", str_day, str_star);
 
