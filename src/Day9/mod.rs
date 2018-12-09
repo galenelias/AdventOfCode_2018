@@ -1,31 +1,41 @@
-fn run_game(players: usize, last_marble_points: usize) {
-	let mut marbles = vec![0; 1];
+use std::collections::VecDeque;
+use regex::Regex;
+
+fn run_game(players: usize, last_marble_points: u64) {
+	let mut marbles = VecDeque::new();
 	let mut scores = vec![0u64; players];
-	let mut current: i64 = 0;
 
-	marbles.reserve(last_marble_points);
-
+	marbles.push_back(0);
 	for marble_number in 1..=last_marble_points {
-		let mut insert_point = (current + (marbles.len() as i64) + 2) % (marbles.len() as i64);
-		if insert_point == 0 {
-			insert_point = marbles.len() as i64;
-		}
-
 		if marble_number % 23 == 0 {
-			let other_marble = (insert_point + (marbles.len() as i64) - 9) % (marbles.len() as i64);
-			scores[(marble_number - 1) % players] += (marble_number + marbles[other_marble as usize]) as u64;
-			marbles.remove(other_marble as usize);
-			current = other_marble % (marbles.len() as i64);
+			for _ in 0..7 {
+				let temp = marbles.pop_back().unwrap();
+				marbles.push_front(temp);
+			}
+			let removed_marble = marbles.pop_front().unwrap();
+			scores[(marble_number as usize - 1) % players] += marble_number + removed_marble;
 		} else {
-			marbles.insert(insert_point as usize, marble_number);
-			current = insert_point;
+			for _ in 0..2 {
+				let temp = marbles.pop_front().unwrap();
+				marbles.push_back(temp);
+			}
+			marbles.push_front(marble_number);
 		}
 	}
 
 	println!("Players: {}\tLast Marble: {}\tHigh Score: {}", players, last_marble_points, scores.iter().max().unwrap());
 }
 
-pub fn solve(_inputs : Vec<String>) {
-	run_game(455, 71223);
-	run_game(455, 7122300);
+
+pub fn solve(inputs : Vec<String>) {
+	let re_input = Regex::new(r"(\d+) players; last marble is worth (\d+) points").unwrap();
+
+	for input in inputs {
+		let caps = re_input.captures(&input).unwrap();
+		let players = caps[1].parse::<usize>().unwrap();
+		let last_marble_points = caps[2].parse::<u64>().unwrap();
+
+		run_game(players, last_marble_points);
+		run_game(players, last_marble_points * 100);
+	}
 }
