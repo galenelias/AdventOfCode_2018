@@ -1,6 +1,5 @@
 use std::collections::HashSet;
 use itertools::Itertools;
-use itertools::FoldWhile::{Continue, Done};
 
 pub fn solve(inputs : Vec<String>) {
 	let inputs = inputs.iter().map(|line| line.parse::<i32>().unwrap()).collect_vec();
@@ -9,9 +8,9 @@ pub fn solve(inputs : Vec<String>) {
 	println!("Part 1: {}", part1);
 
 	let mut vals = HashSet::new();
-	let part2 = inputs.iter().cycle().fold_while(0, |sum, x| {
-		if !vals.insert(sum) { Done(sum) } else { Continue(sum + x) }
-	}).into_inner();
+	let part2 = inputs.iter().cycle().try_fold(0, |sum, x| {
+		if !vals.insert(sum) { Err(sum) } else { Ok(sum + x) }
+	}).unwrap_err();
 
 	println!("Part 2: {}", part2);
 }
