@@ -92,7 +92,7 @@ fn sub_solve(inputs : Vec<String>, elf_attack: i32, allow_elf_deaths: bool, verb
 
 			if verbose { println!("Turn {}, Entity {:?}:", iterations, entity); }
 
-			let distances = build_distances(entity.pos, &grid);
+			let distances = build_distances2(entity.pos, &grid);
 
 			// Dist, pos, first_step, health, enemy_pos
 			let mut target : Option<(usize, (usize, usize), (usize, usize), i32, (usize, usize))> = None;
