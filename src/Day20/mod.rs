@@ -121,15 +121,15 @@ fn build_distances(pos: (i32, i32), doors: &HashSet<(i32,i32)>) -> HashMap<(i32,
 	distances
 }
 
-fn print_nodes(node: &Node, indent: usize) {
+fn _print_nodes(node: &Node, indent: usize) {
 	println!("{}{}, \"{}\", children={}, next={}", "  ".repeat(indent), node.id, node.part, node.children.len(), node.next.as_ref().map_or(0, |node| (*node).id));
 
 	for child in &node.children {
-		print_nodes(child, indent + 1);
+		_print_nodes(child, indent + 1);
 	}
 
 	if node.next.is_some() {
-		print_nodes(node.next.as_ref().unwrap(), indent);
+		_print_nodes(node.next.as_ref().unwrap(), indent);
 	}
 }
 
