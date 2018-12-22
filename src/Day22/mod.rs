@@ -12,8 +12,8 @@ enum Type {
 fn get_risk(region_type: &Type) -> usize {
 	match region_type {
 		Type::Rocky => 0,
-		Type::Narrow => 1,
-		Type::Wet => 2,
+		Type::Wet => 1,
+		Type::Narrow => 2,
 	}
 }
 
@@ -102,8 +102,9 @@ fn navigate(target: (usize, usize), depth: usize, type_memo: &mut HashMap<(usize
 
 		if seen.get(&(state.pos, state.equipped)).unwrap_or(&usize::max_value()) <= &state.time {
 			continue;
+		} else {
+			seen.insert((state.pos, state.equipped), state.time);
 		}
-		seen.insert((state.pos, state.equipped), state.time);
 
 		if state.pos.0 as usize == target.0 && state.pos.1 as usize == target.1 && state.equipped == Equipment::Torch {
 			return state.time;
@@ -124,7 +125,6 @@ fn navigate(target: (usize, usize), depth: usize, type_memo: &mut HashMap<(usize
 			}
 		}
 	}
-
 	unreachable!();
 }
 
