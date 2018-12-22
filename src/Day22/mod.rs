@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use std::collections::{HashMap, HashSet, BinaryHeap};
+use std::collections::{HashMap, BinaryHeap};
 use std::cmp::Ordering;
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
@@ -85,17 +85,12 @@ fn min_dist(pos: (i32, i32), target: (usize, usize)) -> usize {
 
 fn navigate(target: (usize, usize), depth: usize, type_memo: &mut HashMap<(usize,usize),usize>) -> usize {
 	let mut queue : BinaryHeap<State> = BinaryHeap::new();
-	let mut seen = HashSet::new();
+	let mut seen = HashMap::new();
 	queue.push(State{ pos: (0, 0), min_dist: min_dist((0, 0), target), time: 0, equipped: Equipment::Torch});
 
 	while !queue.is_empty() {
 		let state = queue.pop().unwrap();
-
-		if state.pos.0 < 0 || state.pos.1 < 0 {
-			continue;
-		}
-		let pos = state.pos;
-		let region = get_type((pos.0 as usize, pos.1 as usize), depth, target, type_memo);
+		let region = get_type((state.pos.0 as usize, state.pos.1 as usize), depth, target, type_memo);
 
 		if region == Type::Rocky && state.equipped == Equipment::Neither {
 			continue;
@@ -105,31 +100,28 @@ fn navigate(target: (usize, usize), depth: usize, type_memo: &mut HashMap<(usize
 			continue;
 		}
 
-		if !seen.insert(state.clone()) {
+		if seen.get(&(state.pos, state.equipped)).unwrap_or(&usize::max_value()) <= &state.time {
 			continue;
 		}
+		seen.insert((state.pos, state.equipped), state.time);
 
-		if state.pos.0 as usize == target.0 && state.pos.1 as usize == target.1 {
-			if state.equipped == Equipment::Climbing {
-				return state.time + 7;
-			} else {
-				return state.time;
+		if state.pos.0 as usize == target.0 && state.pos.1 as usize == target.1 && state.equipped == Equipment::Torch {
+			return state.time;
+		}
+
+		// Queue up all possible movements
+		for (dx, dy) in &[(-1, 0), (1, 0), (0, -1), (0, 1)] {
+			let pos = (state.pos.0 - dy, state.pos.1 - dx);
+			if pos.0 >= 0 && pos.1 >= 0 {
+				queue.push(State{ pos: pos, min_dist: min_dist(pos, target), time: state.time + 1, equipped: state.equipped});
 			}
 		}
 
-		queue.push(State{ pos: (pos.0 - 1, pos.1), min_dist: min_dist((pos.0 - 1, pos.1), target), time: state.time + 1, equipped: state.equipped});
-		queue.push(State{ pos: (pos.0 + 1, pos.1), min_dist: min_dist((pos.0 + 1, pos.1), target), time: state.time + 1, equipped: state.equipped.clone()});
-		queue.push(State{ pos: (pos.0, pos.1 - 1), min_dist: min_dist((pos.0, pos.1 - 1), target), time: state.time + 1, equipped: state.equipped.clone()});
-		queue.push(State{ pos: (pos.0, pos.1 + 1), min_dist: min_dist((pos.0, pos.1 + 1), target), time: state.time + 1, equipped: state.equipped.clone()});
-
-		if state.equipped != Equipment::Neither {
-			queue.push(State{ pos, min_dist: state.min_dist, time: state.time + 7, equipped: Equipment::Neither});
-		}
-		if state.equipped != Equipment::Torch {
-			queue.push(State{ pos, min_dist: state.min_dist, time: state.time + 7, equipped: Equipment::Torch});
-		}
-		if state.equipped != Equipment::Climbing {
-			queue.push(State{ pos, min_dist: state.min_dist, time: state.time + 7, equipped: Equipment::Climbing});
+		// Queue up all possible equipment switches
+		for equipment in &[Equipment::Neither, Equipment::Torch, Equipment::Climbing] {
+			if &state.equipped != equipment {
+				queue.push(State{ pos: state.pos, min_dist: state.min_dist, time: state.time + 7, equipped: *equipment});
+			}
 		}
 	}
 
