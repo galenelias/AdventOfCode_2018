@@ -22,7 +22,7 @@ impl PartialOrd for Worker {
 }
 
 
-fn solve_steps(part: usize, steps: &Vec<char>, req_map : &HashMap<char, Vec<char>>, total_workers: usize, work_cost_fn : &Fn(&char) -> usize) {
+fn solve_steps(part: usize, steps: &Vec<char>, req_map : &HashMap<char, Vec<char>>, total_workers: usize, work_cost_fn : &dyn Fn(&char) -> usize) {
 	let mut done = HashMap::new();
 
 	let mut result = Vec::new();

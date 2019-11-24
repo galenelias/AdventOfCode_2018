@@ -100,7 +100,6 @@ fn simulate(mut entities: Vec<RefCell<Group>>, boost: i64) -> Option<(ImmuneType
 			return None
 		}
 	}
-	unreachable!();
 }
 
 pub fn solve(inputs : Vec<String>) {

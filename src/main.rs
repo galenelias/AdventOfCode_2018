@@ -54,7 +54,7 @@ fn main() {
 					str.parse::<u32>()
 						.or(Err("day must be an integer".to_owned()))
 						.and_then(|v| match v {
-							0...25 => Ok(()),
+							0..=25 => Ok(()),
 							_ => Err("day must be between 1 and 25".to_owned())
 						})))
 		.arg(
